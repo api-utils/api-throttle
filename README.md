@@ -62,3 +62,4 @@ public class BucketPolicy {
 1. https://zhuanlan.zhihu.com/p/20872901
 1. https://en.wikipedia.org/wiki/Token_bucket
 1. https://engineering.classdojo.com/blog/2015/02/06/rolling-rate-limiter/
+1. https://github.com/eric-wu/dashboard/wiki/3.-Redis-Transactions-via-Spring-Data-Redis
