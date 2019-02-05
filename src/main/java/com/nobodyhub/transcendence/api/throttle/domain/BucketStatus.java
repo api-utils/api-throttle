@@ -7,16 +7,16 @@ public class BucketStatus {
     /**
      * number of tokens remaining for the bucket
      */
-    private long nToken;
+    private long nToken = 0;
     /**
      * millisecond of last request
      */
-    private long lastRequest;
+    private long lastRequest = 0L;
 
     /**
-     * number of tocken consumed in the windowed time
+     * number of token consumed in the windowed time
      */
-    private long nWindowed;
+    private long nWindowed = Long.MAX_VALUE;
 
     public BucketStatus(Integer nToken, Long lastRequest, Long nWindowed) {
         if (nToken != null) {
