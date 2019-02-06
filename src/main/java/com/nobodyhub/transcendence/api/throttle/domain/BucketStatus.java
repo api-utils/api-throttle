@@ -24,6 +24,6 @@ public class BucketStatus {
     public BucketStatus(String nToken, String lastRequest, Long nWindowed) {
         this.nToken = getNonNegative(parseLong(nToken));
         this.lastRequest = getNonNegative(parseLong(lastRequest));
-        this.nWindowed = nWindowed;
+        this.nWindowed = getNonNegative(nWindowed);
     }
 }
