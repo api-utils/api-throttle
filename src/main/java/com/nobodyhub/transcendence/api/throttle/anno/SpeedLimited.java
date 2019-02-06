@@ -22,7 +22,11 @@ public @interface SpeedLimited {
 
     /**
      * Number of times to retrys
-     * -1 means no limit on retry times
      */
-    int retry() default -1;
+    int retry() default 0;
+
+    /**
+     * delay between retries in millisecond
+     */
+    long retryDelay() default 200L;
 }

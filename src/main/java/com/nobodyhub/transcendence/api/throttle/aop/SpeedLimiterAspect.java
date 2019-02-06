@@ -25,13 +25,15 @@ public class SpeedLimiterAspect {
         String bucket = speedLimited.bucket();
         BlockPolicy blockPolicy = speedLimited.whenBlocked();
         int retry = speedLimited.retry();
+        long delay = speedLimited.retryDelay();
 
         Object result = null;
         boolean keepWaiting = true;
-        while (keepWaiting && (retry <= -1 || retry > 0) && (result == null)) {
+        while (keepWaiting && (retry >= 0)) {
             String execToken = bucketService.getSetBucket(bucket);
             if (bucketService.checkExecToken(bucket, execToken)) {
                 result = joinPoint.proceed();
+                keepWaiting = false;
             } else {
                 switch (blockPolicy) {
                     case SKIP: {
@@ -44,6 +46,7 @@ public class SpeedLimiterAspect {
                     }
                 }
             }
+            Thread.sleep(delay);
             retry--;
         }
         return result;
