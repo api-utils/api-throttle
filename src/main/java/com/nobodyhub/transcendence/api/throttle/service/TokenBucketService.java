@@ -113,10 +113,11 @@ public class TokenBucketService {
     @SuppressWarnings({"unchecked"})
     private BucketPolicy getBucketPolicy(RedisOperations redisOperations,
                                          String bucket) {
-        String window = (String) redisOperations.boundHashOps(bucket + "_policy").get("window");
+        String wSize = (String) redisOperations.boundHashOps(bucket + "_policy").get("window.size");
+        String wLimit = (String) redisOperations.boundHashOps(bucket + "_policy").get("window.limit");
         String nToken = (String) redisOperations.boundHashOps(bucket + "_policy").get("nToken");
         String interval = (String) redisOperations.boundHashOps(bucket + "_policy").get("interval");
-        return new BucketPolicy(window, nToken, interval);
+        return new BucketPolicy(wSize, wLimit, nToken, interval);
     }
 
     @SuppressWarnings({"unchecked"})
@@ -134,7 +135,7 @@ public class TokenBucketService {
                                     BucketStatus status,
                                     BucketPolicy policy) {
         redisOperations.boundValueOps(bucket + "_nToken")
-                .set(String.valueOf(policy.assignToken(timestamp - status.getLastRequest(), status)));
+                .set(String.valueOf(status.getNToken() - 1));
         redisOperations.boundValueOps(bucket + "_lastRequest").set(String.valueOf(timestamp));
         redisOperations.boundZSetOps(bucket + "_windowed").add(execToken, timestamp);
     }
