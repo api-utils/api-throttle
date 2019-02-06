@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class TokenBucketService {
@@ -24,9 +25,13 @@ public class TokenBucketService {
             @Override
             @SuppressWarnings({"unchecked"})
             public String execute(RedisOperations operations) throws DataAccessException {
+                // watch
                 operations.watch(bucket + "_policy");
                 BucketPolicy policy = getBucketPolicy(operations, bucket);
+                // multi
+                operations.multi();
                 initBucketStatus(operations, bucket, policy);
+                // exec
                 operations.exec();
                 return null;
             }
@@ -39,6 +44,7 @@ public class TokenBucketService {
             @Override
             @SuppressWarnings({"unchecked"})
             public String execute(RedisOperations redisOperations) throws DataAccessException {
+                // watch
                 redisOperations.watch(Lists.newArrayList(
                         bucket + "_nToken",
                         bucket + "_lastRequest",
@@ -47,33 +53,58 @@ public class TokenBucketService {
                 ));
                 Long timestamp = System.currentTimeMillis();
                 String execToken = UUID.randomUUID().toString();
-                redisOperations.multi();
                 BucketPolicy policy = getBucketPolicy(redisOperations, bucket);
                 BucketStatus status = getBucketStatus(redisOperations, bucket, timestamp, policy);
+                // multi
+                redisOperations.multi();
                 if (policy.check(timestamp, status)) {
-                    updateBucketStatus(redisOperations, bucket, timestamp, status, policy);
+                    updateBucketStatus(redisOperations, bucket, execToken, timestamp, status, policy);
                     updateExecToken(redisOperations, bucket, execToken);
+                    // exec
                     redisOperations.exec();
+                } else {
+                    // discard
+                    redisOperations.discard();
                 }
-                redisOperations.discard();
                 return execToken;
             }
         };
         return this.redisTemplate.execute(callback);
     }
 
+    public void updateBucketPolicy(String bucket, BucketPolicy policy) {
+        SessionCallback<String> callback = new SessionCallback<String>() {
+            @Override
+            @SuppressWarnings({"unchecked"})
+            public String execute(RedisOperations operations) throws DataAccessException {
+                // watch
+                operations.watch(bucket + "_policy");
+                // multi
+                operations.multi();
+                operations.boundHashOps(bucket + "_policy").put("window", String.valueOf(policy.getWindow()));
+                operations.boundHashOps(bucket + "_policy").put("nToken", String.valueOf(policy.getNToken()));
+                operations.boundHashOps(bucket + "_policy").put("interval", String.valueOf(policy.getInterval()));
+                initBucketStatus(operations, bucket, policy);
+                // exec
+                operations.exec();
+                return null;
+            }
+        };
+        this.redisTemplate.execute(callback);
+    }
+
 
     @SuppressWarnings({"unchecked"})
     private BucketStatus getBucketStatus(RedisOperations redisOperations,
                                          String bucket,
-                                         Long timestamp,
+                                         long timestamp,
                                          BucketPolicy policy) {
         // bucket tokens
-        Integer nToken = (Integer) redisOperations.boundValueOps(bucket + "_nToken").get();
+        String nToken = (String) redisOperations.boundValueOps(bucket + "_nToken").get();
         //bucket last request
-        Long lastRequest = (Long) redisOperations.boundValueOps(bucket + "_lastRequest").get();
+        String lastRequest = (String) redisOperations.boundValueOps(bucket + "_lastRequest").get();
         // bucket windowed history
-        redisOperations.boundZSetOps(bucket + "_windowed").removeRangeByScore(0, timestamp - policy.getWindow());
+        redisOperations.boundZSetOps(bucket + "_windowed").removeRangeByScore(0, policy.getWindowUpperLimit(timestamp));
         Long nWindowed = redisOperations.boundZSetOps(bucket + "_windowed").size();
 
         return new BucketStatus(nToken, lastRequest, nWindowed);
@@ -82,9 +113,9 @@ public class TokenBucketService {
     @SuppressWarnings({"unchecked"})
     private BucketPolicy getBucketPolicy(RedisOperations redisOperations,
                                          String bucket) {
-        Long window = (Long) redisOperations.boundHashOps(bucket + "_policy").get("window");
-        Long nToken = (Long) redisOperations.boundHashOps(bucket + "_policy").get("nToken");
-        Long interval = (Long) redisOperations.boundHashOps(bucket + "_policy").get("interval");
+        String window = (String) redisOperations.boundHashOps(bucket + "_policy").get("window");
+        String nToken = (String) redisOperations.boundHashOps(bucket + "_policy").get("nToken");
+        String interval = (String) redisOperations.boundHashOps(bucket + "_policy").get("interval");
         return new BucketPolicy(window, nToken, interval);
     }
 
@@ -92,34 +123,38 @@ public class TokenBucketService {
     private void initBucketStatus(RedisOperations redisOperations,
                                   String bucket,
                                   BucketPolicy policy) {
-        redisOperations.boundValueOps(bucket + "_nToken").set(policy.getNToken());
-        redisOperations.boundValueOps(bucket + "_lastRequest").set(0);
-        redisOperations.boundZSetOps(bucket + "_windowed").add(0, 0);
+        redisOperations.boundValueOps(bucket + "_nToken").set(String.valueOf(policy.getNToken()));
     }
 
     @SuppressWarnings({"unchecked"})
     private void updateBucketStatus(RedisOperations redisOperations,
                                     String bucket,
-                                    Long timestamp,
+                                    String execToken,
+                                    long timestamp,
                                     BucketStatus status,
                                     BucketPolicy policy) {
         redisOperations.boundValueOps(bucket + "_nToken")
-                .set(policy.assignToken(timestamp - status.getLastRequest(), status));
-        redisOperations.boundValueOps(bucket + "_lastRequest").set(timestamp);
-        redisOperations.boundZSetOps(bucket + "_windowed").add(timestamp, timestamp);
+                .set(String.valueOf(policy.assignToken(timestamp - status.getLastRequest(), status)));
+        redisOperations.boundValueOps(bucket + "_lastRequest").set(String.valueOf(timestamp));
+        redisOperations.boundZSetOps(bucket + "_windowed").add(execToken, timestamp);
     }
 
     @SuppressWarnings({"unchecked"})
     private void updateExecToken(RedisOperations redisOperations,
                                  String bucket,
-                                 String execId) {
-        redisOperations.boundValueOps(bucket + "_" + execId).set(true);
+                                 String execToken) {
+        String key = bucket + "_" + execToken;
+        redisOperations.boundValueOps(key).set(String.valueOf(true));
+        redisOperations.expire(key, 1, TimeUnit.MINUTES);
     }
 
     @SuppressWarnings({"unchecked"})
     public boolean checkExecToken(String bucket,
                                   String execToken) {
-        return Boolean.TRUE.equals(this.redisTemplate.boundValueOps(bucket + "_" + execToken).get());
+        String key = bucket + "_" + execToken;
+        boolean rst = Boolean.TRUE.equals(Boolean.valueOf(this.redisTemplate.boundValueOps(key).get()));
+        redisTemplate.delete(key);
+        return rst;
     }
 
 
