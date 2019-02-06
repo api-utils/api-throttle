@@ -10,20 +10,24 @@ public class BucketStatus {
     /**
      * number of tokens remaining for the bucket
      */
-    private Long nToken;
+    private long nToken;
     /**
      * millisecond of last request
      */
-    private Long lastRequest;
-
+    private long lastRequest;
     /**
      * number of token consumed in the windowed time
      */
-    private Long nWindowed;
+    private long nWindowed;
 
     public BucketStatus(String nToken, String lastRequest, Long nWindowed) {
-        this.nToken = getNonNegative(parseLong(nToken));
-        this.lastRequest = getNonNegative(parseLong(lastRequest));
-        this.nWindowed = getNonNegative(nWindowed);
+        Long val = getNonNegative(parseLong(nToken));
+        this.nToken = val == null ? 0 : val;
+
+        val = getNonNegative(parseLong(lastRequest));
+        this.lastRequest = val == null ? 0 : val;
+
+        val = getNonNegative(nWindowed);
+        this.nWindowed = val == null ? 0 : val;
     }
 }
