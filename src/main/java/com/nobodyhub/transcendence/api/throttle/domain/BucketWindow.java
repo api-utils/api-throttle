@@ -37,6 +37,6 @@ public class BucketWindow {
      * @return
      */
     public boolean check(long nWindowed) {
-        return nWindowed <= limit;
+        return nWindowed < limit;
     }
 }

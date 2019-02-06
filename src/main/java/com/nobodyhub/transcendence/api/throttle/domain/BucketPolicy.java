@@ -6,52 +6,66 @@ import lombok.extern.slf4j.Slf4j;
 import static com.nobodyhub.transcendence.api.throttle.utils.NumberUtils.getNonNegative;
 import static com.nobodyhub.transcendence.api.throttle.utils.NumberUtils.parseLong;
 
+/**
+ * Policy that applied to each bucket
+ */
 @Getter
 @Slf4j
 public class BucketPolicy {
     /**
-     * The window size in second to be measured. non-zero, positive
+     * The window size in <b>second</b> to be measured. non-zero, positive
      * null value means infinite window size will be applied
      */
-    private Long window;
+    private BucketWindow window;
     /**
-     * Number of tokens that are available for {@link #window}. non-zero, positive
+     * Number of initial tokens
      * null value means no limitation on the number of the tokens
      */
     private Long nToken;
     /**
-     * Minimum interval between requests, non-negative
-     * null value means no interval required between requests
+     * Minimum interval in <b>second</b> between executions, non-negative
+     * null value means no interval required between executions
      */
     private Long interval;
 
-    public BucketPolicy(String windowStr, String nTokenStr, String intervalStr) {
-        this.window = getNonNegative(parseLong(windowStr));
-        this.nToken = getNonNegative(parseLong(nTokenStr));
-        this.interval = getNonNegative(parseLong(intervalStr));
+    /**
+     * @param windowSize  window size
+     * @param windowLimit window token number
+     * @param nToken      initial number of token
+     * @param interval    interval between execution
+     */
+    public BucketPolicy(String windowSize, String windowLimit, String nToken, String interval) {
+        Long wSize = getNonNegative(parseLong(windowSize));
+        Long wLimit = getNonNegative(parseLong(windowLimit));
+        if (wSize != null && wSize > 0
+                && wLimit != null && wLimit > 0) {
+            this.window = new BucketWindow(wSize, wLimit);
+        }
+        this.nToken = getNonNegative(parseLong(nToken));
+        this.interval = getNonNegative(parseLong(interval));
     }
 
     public BucketPolicy(Long nToken) {
         this.nToken = getNonNegative(nToken);
     }
 
-    public boolean check(Long timestamp, BucketStatus status) {
-        boolean checkInterval = interval == null || timestamp - status.getLastRequest() > interval;
-        boolean checkWindow = window == null || nToken == null || status.getNWindowed() < nToken;
+    /**
+     * check whether can proceed to execute with given status
+     *
+     * @param timestamp timestamp when execute
+     * @param status    current status
+     * @return true to proceed the execution
+     */
+    public boolean check(long timestamp, BucketStatus status) {
+        boolean checkWindow = window == null || window.check(status.getNWindowed());
         boolean checkToken = status.getNToken() > 0;
+        boolean checkInterval = interval == null || timestamp - status.getLastRequest() > interval * 1000;
         return checkInterval && checkWindow && checkToken;
-    }
-
-    public long assignToken(long timeCollapse, BucketStatus status) {
-        if (nToken != null && window != null) {
-            return status.getNToken() - 1 + timeCollapse * nToken / window;
-        }
-        return status.getNToken() - 1;
     }
 
     public long getWindowUpperLimit(long timestamp) {
         if (this.window != null) {
-            return timestamp - this.window;
+            return window.getEarliest(timestamp);
         }
         return timestamp;
     }

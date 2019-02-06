@@ -17,7 +17,7 @@ public class BucketWindowTest {
     public void checkTest() {
         BucketWindow window = new BucketWindow(100L, 10L);
         assertTrue(window.check(5L));
-        assertTrue(window.check(10L));
+        assertFalse(window.check(10L));
         assertFalse(window.check(15L));
     }
 }
