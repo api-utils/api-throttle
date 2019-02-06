@@ -15,8 +15,8 @@ public class SomeConfiguration {
 ```java
 @Component
 public class SomeApiClass {
-    @ApiThrottled(bucket="throttle-policy-bucket", blocking = WAITING)
-    @ApiThrottled(bucket="another-throttle-policy-bucket")
+    @SpeedLimited(bucket="throttle-policy-bucket", blocking = WAITING)
+    @SpeedLimited(bucket="another-throttle-policy-bucket")
     public void someApiMethod() {
         // requesting the api...
     }
@@ -37,26 +37,6 @@ public class SomeApiClass {
 * Support minimum delay `D` between requests.
 
 * A Combination of Above Policies
-
-```java
-public class BucketPolicy {
-    /**
-    * The window size in second to be measured.
-    * -1 means infinite window size will be applied
-    */
-    private int window;
-    /**
-    * Number of tokens that are available for {@link #window}.
-    * -1 means no limitation on the number of the tokens
-    */
-    private int nToken;
-    /**
-    * Minimum interval between requests
-    * 0 means no interval required between requests
-    */
-    private int interval;
-}
-```
 
 ## Reference
 1. https://zhuanlan.zhihu.com/p/20872901
