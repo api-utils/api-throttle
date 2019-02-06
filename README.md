@@ -28,7 +28,7 @@ public class SomeApiClass {
 
 ## Blocking Policy
 * Wait: keep waiting until get new token
-* Reject: deny the requst
+* Skip: skip the request
 
 ## Bucket Policy
 
