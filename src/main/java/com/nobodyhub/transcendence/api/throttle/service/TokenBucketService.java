@@ -46,17 +46,17 @@ public class TokenBucketService {
                         bucket + "_policy"
                 ));
                 Long timestamp = System.currentTimeMillis();
-                String execId = UUID.randomUUID().toString();
+                String execToken = UUID.randomUUID().toString();
                 redisOperations.multi();
                 BucketPolicy policy = getBucketPolicy(redisOperations, bucket);
                 BucketStatus status = getBucketStatus(redisOperations, bucket, timestamp, policy);
                 if (policy.check(timestamp, status)) {
                     updateBucketStatus(redisOperations, bucket, timestamp, status, policy);
-                    updateExecResult(redisOperations, bucket, execId);
+                    updateExecToken(redisOperations, bucket, execToken);
                     redisOperations.exec();
                 }
                 redisOperations.discard();
-                return execId;
+                return execToken;
             }
         };
         return this.redisTemplate.execute(callback);
@@ -110,17 +110,16 @@ public class TokenBucketService {
     }
 
     @SuppressWarnings({"unchecked"})
-    private void updateExecResult(RedisOperations redisOperations,
-                                  String bucket,
-                                  String execId) {
+    private void updateExecToken(RedisOperations redisOperations,
+                                 String bucket,
+                                 String execId) {
         redisOperations.boundValueOps(bucket + "_" + execId).set(true);
     }
 
     @SuppressWarnings({"unchecked"})
-    public boolean checkExecResult(RedisOperations redisOperations,
-                                   String bucket,
-                                   String execId) {
-        return Boolean.TRUE.equals(redisOperations.boundValueOps(bucket + "_" + execId).get());
+    public boolean checkExecToken(String bucket,
+                                  String execToken) {
+        return Boolean.TRUE.equals(this.redisTemplate.boundValueOps(bucket + "_" + execToken).get());
     }
 
 
