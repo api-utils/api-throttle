@@ -18,6 +18,7 @@ public class SpeedLimiterAspect {
         this.bucketService = bucketService;
     }
 
+    //TODO: handle SpeedLimits
     @Around("@annotation(com.nobodyhub.transcendence.api.throttle.anno.SpeedLimited)")
     public Object limitSpeed(ProceedingJoinPoint joinPoint) throws Throwable {
         SpeedLimited speedLimited = ((MethodSignature) joinPoint.getSignature())
