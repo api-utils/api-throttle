@@ -1,28 +1,28 @@
 package com.nobodyhub.transcendence.api.throttle.policy.utils;
 
-import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketPolicy;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketWindow;
+import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import lombok.AllArgsConstructor;
 
 import static com.nobodyhub.transcendence.api.throttle.core.utils.NumberUtils.getNonNegative;
 import static com.nobodyhub.transcendence.api.throttle.core.utils.NumberUtils.parseLong;
 
 @AllArgsConstructor
-public final class BucketPolicyBuilder {
-    private BucketPolicy policy;
+public final class ThrottlePolicyBuilder {
+    private ThrottlePolicy policy;
 
-    public static BucketPolicyBuilder of(String bucket) {
-        BucketPolicy policy = new BucketPolicy();
+    public static ThrottlePolicyBuilder of(String bucket) {
+        ThrottlePolicy policy = new ThrottlePolicy();
         policy.setBucket(bucket);
-        return new BucketPolicyBuilder(policy);
+        return new ThrottlePolicyBuilder(policy);
     }
 
-    public BucketPolicyBuilder window(BucketWindow window) {
+    public ThrottlePolicyBuilder window(BucketWindow window) {
         this.policy.setWindow(window);
         return this;
     }
 
-    public BucketPolicyBuilder window(String windowSize, String windowLimit) {
+    public ThrottlePolicyBuilder window(String windowSize, String windowLimit) {
         Long wSize = getNonNegative(parseLong(windowSize));
         Long wLimit = getNonNegative(parseLong(windowLimit));
         if (wSize != null && wSize > 0
@@ -32,27 +32,27 @@ public final class BucketPolicyBuilder {
         return this;
     }
 
-    public BucketPolicyBuilder nToken(Long nToken) {
+    public ThrottlePolicyBuilder nToken(Long nToken) {
         this.policy.setNToken(getNonNegative(nToken));
         return this;
     }
 
-    public BucketPolicyBuilder nToken(String nToken) {
+    public ThrottlePolicyBuilder nToken(String nToken) {
         this.nToken(parseLong(nToken));
         return this;
     }
 
-    public BucketPolicyBuilder interval(Long interval) {
+    public ThrottlePolicyBuilder interval(Long interval) {
         this.policy.setInterval(getNonNegative(interval));
         return this;
     }
 
-    public BucketPolicyBuilder interval(String interval) {
+    public ThrottlePolicyBuilder interval(String interval) {
         this.interval(parseLong(interval));
         return this;
     }
 
-    public BucketPolicy build() {
+    public ThrottlePolicy build() {
         return this.policy;
     }
 }

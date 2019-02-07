@@ -2,9 +2,9 @@ package com.nobodyhub.transcendence.api.throttle.bucket.service;
 
 import com.google.common.collect.Lists;
 import com.nobodyhub.transcendence.api.throttle.bucket.domain.BucketStatus;
-import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketPolicy;
+import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import com.nobodyhub.transcendence.api.throttle.policy.service.ThrottlePolicyService;
-import com.nobodyhub.transcendence.api.throttle.policy.utils.BucketPolicyBuilder;
+import com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyBuilder;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.SessionCallback;
@@ -32,7 +32,7 @@ public class TokenBucketService {
             public String execute(RedisOperations operations) throws DataAccessException {
                 // watch
                 operations.watch(bucket + "_policy");
-                BucketPolicy policy = getBucketPolicy(operations, bucket);
+                ThrottlePolicy policy = getBucketPolicy(operations, bucket);
                 // multi
                 operations.multi();
                 initBucketStatus(operations, bucket, policy);
@@ -58,7 +58,7 @@ public class TokenBucketService {
                 ));
                 Long timestamp = System.currentTimeMillis();
                 String execToken = UUID.randomUUID().toString();
-                BucketPolicy policy = getBucketPolicy(redisOperations, bucket);
+                ThrottlePolicy policy = getBucketPolicy(redisOperations, bucket);
                 BucketStatus status = getBucketStatus(redisOperations, bucket, timestamp, policy);
                 // multi
                 redisOperations.multi();
@@ -77,7 +77,7 @@ public class TokenBucketService {
         return this.redisTemplate.execute(callback);
     }
 
-    public void updateBucketPolicy(String bucket, BucketPolicy policy) {
+    public void updateBucketPolicy(String bucket, ThrottlePolicy policy) {
         SessionCallback<String> callback = new SessionCallback<String>() {
             @Override
             @SuppressWarnings({"unchecked"})
@@ -103,7 +103,7 @@ public class TokenBucketService {
     private BucketStatus getBucketStatus(RedisOperations redisOperations,
                                          String bucket,
                                          long timestamp,
-                                         BucketPolicy policy) {
+                                         ThrottlePolicy policy) {
         // bucket tokens
         String nToken = (String) redisOperations.boundValueOps(bucket + "_nToken").get();
         //bucket last request
@@ -116,19 +116,19 @@ public class TokenBucketService {
     }
 
     @SuppressWarnings({"unchecked"})
-    private BucketPolicy getBucketPolicy(RedisOperations redisOperations,
-                                         String bucket) {
+    private ThrottlePolicy getBucketPolicy(RedisOperations redisOperations,
+                                           String bucket) {
         String wSize = (String) redisOperations.boundHashOps(bucket + "_policy").get("window.size");
         String wLimit = (String) redisOperations.boundHashOps(bucket + "_policy").get("window.limit");
         String nToken = (String) redisOperations.boundHashOps(bucket + "_policy").get("nToken");
         String interval = (String) redisOperations.boundHashOps(bucket + "_policy").get("interval");
-        return BucketPolicyBuilder.of(bucket).window(wSize, wLimit).nToken(nToken).interval(interval).build();
+        return ThrottlePolicyBuilder.of(bucket).window(wSize, wLimit).nToken(nToken).interval(interval).build();
     }
 
     @SuppressWarnings({"unchecked"})
     private void initBucketStatus(RedisOperations redisOperations,
                                   String bucket,
-                                  BucketPolicy policy) {
+                                  ThrottlePolicy policy) {
         redisOperations.boundValueOps(bucket + "_nToken").set(String.valueOf(policy.getNToken()));
     }
 
@@ -138,7 +138,7 @@ public class TokenBucketService {
                                     String execToken,
                                     long timestamp,
                                     BucketStatus status,
-                                    BucketPolicy policy) {
+                                    ThrottlePolicy policy) {
         redisOperations.boundValueOps(bucket + "_nToken")
                 .set(String.valueOf(status.getNToken() - 1));
         redisOperations.boundValueOps(bucket + "_lastRequest").set(String.valueOf(timestamp));

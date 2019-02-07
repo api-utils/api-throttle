@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 @Data
 @NoArgsConstructor
-public class BucketPolicy {
+public class ThrottlePolicy {
     /**
      * name of bucket to which the policy applies
      */
