@@ -1,0 +1,18 @@
+# Database Configuration
+spring.data.mongodb:
+  host: javis-server
+  port: 27017
+  database: api_throttle
+  #username:
+  #password:
+
+# Cache
+spring.cache:
+  type: redis
+  redis:
+    time-to-live: 600000
+
+# Redis
+spring.redis:
+  host: javis-server
+  port: 6379
