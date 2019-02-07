@@ -1,5 +1,6 @@
 package com.nobodyhub.transcendence.api.throttle;
 
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @Configuration
 @ComponentScan
 @EnableAspectJAutoProxy
+@EnableCaching
 public class ApiThrottleConfiguration {
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {

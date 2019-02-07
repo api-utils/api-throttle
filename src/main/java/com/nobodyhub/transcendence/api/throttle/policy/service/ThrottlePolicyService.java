@@ -5,11 +5,55 @@ import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketWindow;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import com.nobodyhub.transcendence.api.throttle.policy.repository.ThrottlePolicyRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class ThrottlePolicyService {
+    private final ThrottlePolicyRepository policyRepository;
+
+    protected ThrottlePolicyService(ThrottlePolicyRepository policyRepository) {
+        this.policyRepository = policyRepository;
+    }
+
+    /**
+     * Get policy by bucket name
+     *
+     * @param bucket
+     * @return
+     */
+    @Cacheable(value = "throttle-policy", key = "#bucket")
+    public ThrottlePolicy find(String bucket) {
+        Optional<ThrottlePolicy> policy = this.policyRepository.getByBucket(bucket);
+        return policy.orElse(null);
+    }
+
+    /**
+     * Update policy
+     *
+     * @param policy
+     * @return
+     */
+    @CachePut(value = "throttle-policy", key = "#policy.bucket")
+    public ThrottlePolicy update(ThrottlePolicy policy) {
+        return this.policyRepository.save(policy);
+    }
+
+    /**
+     * Delete policy
+     *
+     * @param bucket
+     */
+    @CacheEvict(value = "throttle-policy", key = "#bucket")
+    public void remove(String bucket) {
+        this.policyRepository.deleteById(bucket);
+    }
+
     /**
      * check whether can proceed to execute with given status
      *
