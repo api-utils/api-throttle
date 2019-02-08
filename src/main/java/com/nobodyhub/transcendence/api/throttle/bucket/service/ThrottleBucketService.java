@@ -15,12 +15,12 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class TokenBucketService {
+public class ThrottleBucketService {
     private final StringRedisTemplate redisTemplate;
     private final ThrottlePolicyService policyService;
 
-    public TokenBucketService(StringRedisTemplate redisTemplate,
-                              ThrottlePolicyService policyService) {
+    public ThrottleBucketService(StringRedisTemplate redisTemplate,
+                                 ThrottlePolicyService policyService) {
         this.redisTemplate = redisTemplate;
         this.policyService = policyService;
     }
