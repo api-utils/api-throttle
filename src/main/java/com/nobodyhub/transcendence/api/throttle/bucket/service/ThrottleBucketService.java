@@ -26,13 +26,14 @@ public class TokenBucketService {
     }
 
     public void createBucket(final String bucket) {
+        ThrottlePolicy policy = policyService.find(bucket);
+
         SessionCallback<String> callback = new SessionCallback<String>() {
             @Override
             @SuppressWarnings({"unchecked"})
             public String execute(RedisOperations operations) throws DataAccessException {
                 // watch
-                operations.watch(bucket + "_policy");
-                ThrottlePolicy policy = getBucketPolicy(operations, bucket);
+                operations.watch(bucket);
                 // multi
                 operations.multi();
                 initBucketStatus(operations, bucket, policy);

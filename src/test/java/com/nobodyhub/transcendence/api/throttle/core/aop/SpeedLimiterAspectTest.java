@@ -1,7 +1,7 @@
 package com.nobodyhub.transcendence.api.throttle.core.aop;
 
 import com.google.common.collect.Lists;
-import com.nobodyhub.transcendence.api.throttle.bucket.service.TokenBucketService;
+import com.nobodyhub.transcendence.api.throttle.bucket.service.ThrottleBucketService;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyBuilder;
 import org.junit.After;
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 public class SpeedLimiterAspectTest {
 
     @Autowired
-    private TokenBucketService tokenBucketService;
+    private ThrottleBucketService throttleBucketService;
 
     @Autowired
     private SpeedLimiterAspectTestConfiguration.TestClass testClass;
@@ -37,7 +37,7 @@ public class SpeedLimiterAspectTest {
     @Test
     public void test() {
         ThrottlePolicy policy = ThrottlePolicyBuilder.of("bucket").nToken(13L).build();
-        tokenBucketService.updateBucketPolicy("TestBucket", policy);
+        throttleBucketService.updateBucketPolicy("TestBucket", policy);
 
         List<Long> executions = Lists.newArrayList();
 

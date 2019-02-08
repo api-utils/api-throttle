@@ -1,6 +1,6 @@
 package com.nobodyhub.transcendence.api.throttle.core.aop;
 
-import com.nobodyhub.transcendence.api.throttle.bucket.service.TokenBucketService;
+import com.nobodyhub.transcendence.api.throttle.bucket.service.ThrottleBucketService;
 import com.nobodyhub.transcendence.api.throttle.core.anno.BlockPolicy;
 import com.nobodyhub.transcendence.api.throttle.core.anno.SpeedLimited;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 @Aspect
 @Component
 public class SpeedLimiterAspect {
-    private final TokenBucketService bucketService;
+    private final ThrottleBucketService bucketService;
 
-    public SpeedLimiterAspect(TokenBucketService bucketService) {
+    public SpeedLimiterAspect(ThrottleBucketService bucketService) {
         this.bucketService = bucketService;
     }
 
