@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -28,7 +30,8 @@ public class ThrottlePolicyService {
      * @return
      */
     @Cacheable(value = "throttle-policy", key = "#bucket")
-    public ThrottlePolicy find(String bucket) {
+    @Nullable
+    public ThrottlePolicy find(@NonNull String bucket) {
         Optional<ThrottlePolicy> policy = this.policyRepository.getByBucket(bucket);
         return policy.orElse(null);
     }
@@ -40,7 +43,8 @@ public class ThrottlePolicyService {
      * @return
      */
     @CachePut(value = "throttle-policy", key = "#policy.bucket")
-    public ThrottlePolicy update(ThrottlePolicy policy) {
+    @NonNull
+    public ThrottlePolicy update(@NonNull ThrottlePolicy policy) {
         return this.policyRepository.save(policy);
     }
 
@@ -50,7 +54,7 @@ public class ThrottlePolicyService {
      * @param bucket
      */
     @CacheEvict(value = "throttle-policy", key = "#bucket")
-    public void remove(String bucket) {
+    public void delete(@NonNull String bucket) {
         this.policyRepository.deleteById(bucket);
     }
 

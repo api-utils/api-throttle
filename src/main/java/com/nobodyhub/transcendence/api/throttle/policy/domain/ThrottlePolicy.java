@@ -1,6 +1,7 @@
 package com.nobodyhub.transcendence.api.throttle.policy.domain;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -11,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode
 public class ThrottlePolicy {
     /**
      * name of bucket to which the policy applies
