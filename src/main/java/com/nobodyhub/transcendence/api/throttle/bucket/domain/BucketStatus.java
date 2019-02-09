@@ -1,12 +1,20 @@
 package com.nobodyhub.transcendence.api.throttle.bucket.domain;
 
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 
 import static com.nobodyhub.transcendence.api.throttle.core.utils.NumberUtils.getNonNegative;
 import static com.nobodyhub.transcendence.api.throttle.core.utils.NumberUtils.parseLong;
 
-@Getter
+@Data
+@EqualsAndHashCode
+@RequiredArgsConstructor
 public class BucketStatus {
+    /**
+     * name of the bucket
+     */
+    private String bucket;
     /**
      * number of tokens remaining for the bucket
      */
