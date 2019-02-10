@@ -27,7 +27,7 @@ public class ThrottleBucketServiceTest {
         policyService.update(ThrottlePolicyBuilder.of("createBucketTest").nToken(10L).build());
 
         bucketService.createBucket("createBucketTest");
-        String execToken = bucketService.getSetBucket("createBucketTest");
+        String execToken = bucketService.updateBucket("createBucketTest");
         assertNotNull(execToken);
         assertTrue(bucketService.checkExecToken("createBucketTest", execToken));
 
