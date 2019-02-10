@@ -62,7 +62,8 @@ public class ThrottleBucketService {
             public List<Object> execute(RedisOperations operations) throws DataAccessException {
                 // watch
                 operations.watch(Lists.newArrayList(
-                        status(policy.getBucket())
+                        status(policy.getBucket()),
+                        window(policy.getBucket())
                 ));
                 // multi
                 operations.multi();
@@ -93,7 +94,8 @@ public class ThrottleBucketService {
                 ThrottlePolicy policy = policyService.find(bucket);
                 // watch
                 redisOperations.watch(Lists.newArrayList(
-                        status(bucket)
+                        status(bucket),
+                        window(bucket)
                 ));
                 long timestamp = getServerTime();
                 String execToken = UUID.randomUUID().toString();

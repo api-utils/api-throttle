@@ -48,26 +48,49 @@ public class BucketStatusBuilder {
         return builder;
     }
 
+    /**
+     * set bucket tokens
+     *
+     * @return
+     */
     public BucketStatusBuilder nToken(long nToken) {
         this.status.setNToken(nToken);
         return this;
     }
 
+    /**
+     * descrease the token in the bucket
+     *
+     * @return
+     */
     public BucketStatusBuilder decreaseNToken() {
         this.status.setNToken(this.status.getNToken() - 1);
         return this;
     }
 
+    /**
+     * @param lastRequest
+     * @return
+     */
     public BucketStatusBuilder lastRequest(long lastRequest) {
         this.status.setLastRequest(lastRequest);
         return this;
     }
 
+    /**
+     * Set the number of execution in the window
+     *
+     * @param nWindowed
+     * @return
+     */
     public BucketStatusBuilder nWindowed(long nWindowed) {
         this.status.setNToken(nWindowed);
         return this;
     }
 
+    /**
+     * @return the final bucket status built
+     */
     public BucketStatus build() {
         return this.status;
     }
