@@ -20,7 +20,7 @@ public final class ThrottlePolicyUtil {
     public static boolean check(ThrottlePolicy policy, long timestamp, BucketStatus status) {
         boolean checkWindow = policy.getWindow() == null || check(policy.getWindow(), status.getNWindowed());
         boolean checkToken = status.getNToken() > 0;
-        boolean checkInterval = policy.getInterval() == null || timestamp - status.getLastRequest() > policy.getInterval() * 1000;
+        boolean checkInterval = policy.getInterval() == null || timestamp - status.getLastRequest() > policy.getInterval();
         return checkInterval && checkWindow && checkToken;
     }
 

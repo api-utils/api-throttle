@@ -30,7 +30,7 @@ public class ThrottlePolicy {
      */
     private Long nToken;
     /**
-     * Minimum interval in <b>second</b> between executions, non-negative
+     * Minimum interval in <b>millisecond</b> between executions, non-negative
      * null value means no interval required between executions
      */
     private Long interval;
