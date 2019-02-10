@@ -1,4 +1,4 @@
-package com.nobodyhub.transcendence.api.throttle.api;
+package com.nobodyhub.transcendence.api.throttle.policy.controller;
 
 import com.nobodyhub.transcendence.api.throttle.api.domain.PagingResponse;
 import com.nobodyhub.transcendence.api.throttle.api.domain.SingleResponse;
