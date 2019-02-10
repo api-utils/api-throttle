@@ -109,6 +109,7 @@ public class ThrottleBucketRepository {
                     // exec
                     ret = redisOperations.exec();
                 } else {
+                    // TODO: push a message to message broker
                     // discard
                     redisOperations.discard();
                 }
