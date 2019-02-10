@@ -9,11 +9,13 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.data.redis.core.RedisConnectionUtils;
 import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +27,7 @@ import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePoli
 @Repository
 @RequiredArgsConstructor
 public class ThrottleBucketRepository {
-    private final StringRedisTemplate redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * Create new bucket for the given policy
@@ -150,6 +152,57 @@ public class ThrottleBucketRepository {
     }
 
     /**
+     * Get status for given bucket
+     *
+     * @param bucket
+     * @return
+     */
+    @Nullable
+    public BucketStatus getBucketStatus(@NonNull String bucket) {
+        BucketStatus status = (BucketStatus) redisTemplate.boundValueOps(status(bucket)).get();
+        Long nWindowed = redisTemplate.boundZSetOps(window(bucket)).size();
+        if (status != null && nWindowed != null) {
+            status.setNWindowed(nWindowed);
+        }
+        return status;
+    }
+
+    /**
+     * Get bucket status for given bucket names
+     *
+     * @param buckets bucket name list
+     * @return bucket status list
+     */
+    @NotNull
+    public List<BucketStatus> getBucketStatus(@NotNull String... buckets) {
+        SessionCallback<List<Object>> callback = new SessionCallback<List<Object>>() {
+            @Override
+            public List<Object> execute(RedisOperations operations) throws DataAccessException {
+                for (String bucket : buckets) {
+                    redisTemplate.boundValueOps(status(bucket)).get();
+                    redisTemplate.boundZSetOps(window(bucket)).size();
+                }
+                return null;
+            }
+        };
+        List<Object> retVals = this.redisTemplate.executePipelined(callback);
+        List<BucketStatus> results = Lists.newArrayList();
+        for (int idx = 0; idx < retVals.size(); idx = idx + 2) {
+            if (idx + 1 < retVals.size()) {
+                BucketStatus status = (BucketStatus) retVals.get(idx);
+                Long nWindowed = (Long) retVals.get(idx + 1);
+                if (status != null) {
+                    if (nWindowed != null) {
+                        status.setNWindowed(nWindowed);
+                    }
+                    results.add(status);
+                }
+            }
+        }
+        return results;
+    }
+
+    /**
      * Check the value of execution token
      *
      * @param bucket
@@ -159,7 +212,7 @@ public class ThrottleBucketRepository {
     public boolean checkExecToken(@NonNull String bucket,
                                   @NonNull String execToken) {
         String key = execution(bucket, execToken);
-        boolean rst = Boolean.TRUE.equals(Boolean.valueOf(this.redisTemplate.boundValueOps(key).get()));
+        boolean rst = Boolean.TRUE.equals(this.redisTemplate.boundValueOps(key).get());
         redisTemplate.delete(key);
         return rst;
     }
