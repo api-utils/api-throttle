@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,10 @@ public class ThrottlePolicyService {
 
     protected ThrottlePolicyService(ThrottlePolicyRepository policyRepository) {
         this.policyRepository = policyRepository;
+    }
+
+    public Page<ThrottlePolicy> findAll(Pageable pageable) {
+        return policyRepository.findAll(pageable);
     }
 
     /**
