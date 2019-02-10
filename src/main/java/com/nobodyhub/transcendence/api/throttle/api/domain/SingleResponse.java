@@ -3,7 +3,7 @@ package com.nobodyhub.transcendence.api.throttle.api.domain;
 import lombok.Data;
 
 /**
- * Response contains only data
+ * Response contains only single data
  */
 @Data
 public class SingleResponse<T> {

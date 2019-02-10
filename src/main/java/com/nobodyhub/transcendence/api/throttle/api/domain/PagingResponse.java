@@ -7,7 +7,7 @@ import org.springframework.lang.NonNull;
 import java.util.List;
 
 /**
- * Response entity for pagable result
+ * Response contains a page of data with paging information
  *
  * @param <T> result class
  */

@@ -23,7 +23,7 @@ public class ThrottleBucketService {
     private final ThrottlePolicyService policyService;
 
     @Nullable
-    public List<BucketStatus> findBucket(@NonNull String... buckets) {
+    public List<BucketStatus> findBucket(@NonNull List<String> buckets) {
         return bucketRepository.getBucketStatus(buckets);
     }
 

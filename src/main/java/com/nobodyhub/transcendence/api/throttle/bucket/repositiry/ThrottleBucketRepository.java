@@ -174,7 +174,7 @@ public class ThrottleBucketRepository {
      * @return bucket status list
      */
     @NotNull
-    public List<BucketStatus> getBucketStatus(@NotNull String... buckets) {
+    public List<BucketStatus> getBucketStatus(@NotNull List<String> buckets) {
         SessionCallback<List<Object>> callback = new SessionCallback<List<Object>>() {
             @Override
             public List<Object> execute(RedisOperations operations) throws DataAccessException {
