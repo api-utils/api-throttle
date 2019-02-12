@@ -12,5 +12,9 @@ public enum BlockPolicy {
      * Skip current one and try to process next
      */
     SKIP,
+    /**
+     * Retry several times before give up
+     */
+    RETRY,
     ;
 }
