@@ -1,6 +1,7 @@
 package com.nobodyhub.transcendence.api.throttle.bucket.repositiry;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.nobodyhub.transcendence.api.throttle.bucket.domain.BucketStatus;
 import com.nobodyhub.transcendence.api.throttle.bucket.utils.BucketStatusBuilder;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
@@ -16,9 +17,9 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 import static com.nobodyhub.transcendence.api.throttle.bucket.utils.ThrottleBucketNamingUtil.*;
 import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyUtil.check;
@@ -78,52 +79,59 @@ public class ThrottleBucketRepository {
      * Fetch the bucket status and check whether to proceed to execute
      * A new key for the execution will be added to redis and set to true if OK to execute
      *
-     * @param policy
+     * @param policies
      * @return the execution token
      */
-    public String updateBucket(@NonNull ThrottlePolicy policy) {
-        SessionCallback<List<Object>> callback = new SessionCallback<List<Object>>() {
+    public boolean checkBucket(@NonNull List<ThrottlePolicy> policies) {
+        Collections.sort(policies);
+        SessionCallback<Boolean> callback = new SessionCallback<Boolean>() {
             @Override
             @SuppressWarnings({"unchecked"})
-            public List<Object> execute(RedisOperations redisOperations) throws DataAccessException {
-
+            public Boolean execute(RedisOperations redisOperations) throws DataAccessException {
+                List<String> watchList = Lists.newArrayList();
+                policies.stream()
+                        .map(ThrottlePolicy::getBucket)
+                        .forEach(bucket -> {
+                            watchList.add(status(bucket));
+                            watchList.add(window(bucket));
+                        });
                 // watch
-                redisOperations.watch(Lists.newArrayList(
-                        status(policy.getBucket()),
-                        window(policy.getBucket())
-                ));
+                redisOperations.watch(watchList);
                 long timestamp = getServerTime();
-                String execToken = UUID.randomUUID().toString();
-                BucketStatus status = getBucketStatus(redisOperations, timestamp, policy);
+                Map<ThrottlePolicy, BucketStatus> statusMap = Maps.newHashMap();
+                policies.forEach(policy -> statusMap.put(policy, getBucketStatus(redisOperations, timestamp, policy)));
                 // multi
-                List<Object> ret = Lists.newArrayList();
+                Boolean executed = null;
                 redisOperations.multi();
-                if (check(policy, timestamp, status)) {
+
+                if (statusMap.entrySet().stream().allMatch(entry ->
+                        check(entry.getKey(), timestamp, entry.getValue()))) {
                     // update the status
-                    status = BucketStatusBuilder.of(status)
-                            .decreaseNToken()
-                            .lastRequest(timestamp)
-                            .build();
-                    updateBucketStatus(redisOperations, status, execToken);
-                    updateExecToken(redisOperations, policy.getBucket(), execToken);
+                    statusMap.values().stream()
+                            .map(status -> BucketStatusBuilder.of(status)
+                                    .decreaseNToken()
+                                    .lastRequest(timestamp)
+                                    .build())
+                            .forEach(status -> updateBucketStatus(redisOperations, status));
                     // exec
-                    ret = redisOperations.exec();
+                    redisOperations.exec();
+                    executed = true;
                 } else {
                     // TODO: push a message to message broker
                     // discard
                     redisOperations.discard();
+                    executed = false;
                 }
-                ret.add(execToken);
-                return ret;
+                return executed;
             }
         };
 
         //TODO: consider time limits on retry
-        List<Object> rst = null;
-        while (rst == null || rst.size() <= 1) {
+        Boolean rst = null;
+        while (rst == null) {
             rst = this.redisTemplate.execute(callback);
         }
-        return (String) rst.get(rst.size() - 1);
+        return rst;
     }
 
     /**
@@ -224,31 +232,12 @@ public class ThrottleBucketRepository {
      *
      * @param redisOperations
      * @param status
-     * @param execToken
      */
     @SuppressWarnings({"unchecked"})
     private void updateBucketStatus(@NonNull RedisOperations redisOperations,
-                                    @NonNull BucketStatus status,
-                                    @NonNull String execToken) {
+                                    @NonNull BucketStatus status) {
         redisOperations.boundValueOps(status(status.getBucket())).set(status);
-        redisOperations.boundZSetOps(window(status.getBucket())).add(execToken, status.getLastRequest());
-    }
-
-    /**
-     * Put the execution token to Redis
-     *
-     * @param redisOperations
-     * @param bucket
-     * @param execToken
-     */
-    @SuppressWarnings({"unchecked"})
-    private void updateExecToken(@NonNull RedisOperations redisOperations,
-                                 @NonNull String bucket,
-                                 @NonNull String execToken) {
-        String key = execution(bucket, execToken);
-        redisOperations.boundValueOps(key).set(String.valueOf(true));
-        // TODO: make the expire time configurable
-        redisOperations.expire(key, 1, TimeUnit.MINUTES);
+        redisOperations.boundZSetOps(window(status.getBucket())).add(status.getLastRequest(), status.getLastRequest());
     }
 
 

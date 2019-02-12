@@ -13,7 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-public class ThrottlePolicy {
+public class ThrottlePolicy implements Comparable<ThrottlePolicy> {
     /**
      * name of bucket to which the policy applies
      */
@@ -34,4 +34,9 @@ public class ThrottlePolicy {
      * null value means no interval required between executions
      */
     private Long interval;
+
+    @Override
+    public int compareTo(ThrottlePolicy o) {
+        return this.getBucket().compareTo(o.getBucket());
+    }
 }

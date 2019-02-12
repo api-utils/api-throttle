@@ -1,5 +1,6 @@
 package com.nobodyhub.transcendence.api.throttle.bucket.service;
 
+import com.google.common.collect.Lists;
 import com.nobodyhub.transcendence.api.throttle.policy.service.ThrottlePolicyService;
 import com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyBuilder;
 import org.junit.Test;
@@ -9,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
 @RunWith(SpringRunner.class)
@@ -27,9 +27,6 @@ public class ThrottleBucketServiceTest {
         policyService.update(ThrottlePolicyBuilder.of("createBucketTest").nToken(10L).build());
 
         bucketService.createBucket("createBucketTest");
-        String execToken = bucketService.updateBucket("createBucketTest");
-        assertNotNull(execToken);
-        assertTrue(bucketService.checkExecToken("createBucketTest", execToken));
-
+        assertTrue(bucketService.checkBucket(Lists.newArrayList("createBucketTest")));
     }
 }

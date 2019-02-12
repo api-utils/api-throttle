@@ -1,5 +1,6 @@
 package com.nobodyhub.transcendence.api.throttle.bucket.service;
 
+import com.google.common.collect.Lists;
 import com.nobodyhub.transcendence.api.throttle.bucket.domain.BucketStatus;
 import com.nobodyhub.transcendence.api.throttle.bucket.repositiry.ThrottleBucketRepository;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
@@ -55,27 +56,20 @@ public class ThrottleBucketService {
     /**
      * Update bucket status
      *
-     * @param bucket
-     * @return execution token
+     * @param buckets
+     * @return true to proceed execution
      */
-    @Nullable
-    public String updateBucket(@NonNull String bucket) {
-        ThrottlePolicy policy = policyService.find(bucket);
-        if (policy != null) {
-            return bucketRepository.updateBucket(policy);
+    public boolean checkBucket(@NonNull List<String> buckets) {
+        List<ThrottlePolicy> policies = Lists.newArrayList();
+        for (String bucket : buckets) {
+            ThrottlePolicy policy = policyService.find(bucket);
+            if (policy != null) {
+                policies.add(policy);
+            }
         }
-        return null;
-    }
-
-    /**
-     * check whether to proceed with the execution token
-     *
-     * @param bucket    bucket name
-     * @param execToken execution token
-     * @return
-     */
-    public boolean checkExecToken(@NonNull String bucket,
-                                  @NonNull String execToken) {
-        return this.bucketRepository.checkExecToken(bucket, execToken);
+        if (!policies.isEmpty() && policies.size() == buckets.size()) {
+            return bucketRepository.checkBucket(policies);
+        }
+        return false;
     }
 }
