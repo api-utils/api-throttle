@@ -59,7 +59,7 @@ public class ThrottleBucketService {
      * @param buckets
      * @return true to proceed execution
      */
-    public boolean checkBucket(@NonNull List<String> buckets) {
+    public boolean checkBucket(@NonNull String... buckets) {
         List<ThrottlePolicy> policies = Lists.newArrayList();
         for (String bucket : buckets) {
             ThrottlePolicy policy = policyService.find(bucket);
@@ -67,7 +67,7 @@ public class ThrottleBucketService {
                 policies.add(policy);
             }
         }
-        if (!policies.isEmpty() && policies.size() == buckets.size()) {
+        if (!policies.isEmpty() && policies.size() == buckets.length) {
             return bucketRepository.checkBucket(policies);
         }
         return false;

@@ -1,6 +1,5 @@
 package com.nobodyhub.transcendence.api.throttle.bucket.service;
 
-import com.google.common.collect.Lists;
 import com.nobodyhub.transcendence.api.throttle.policy.service.ThrottlePolicyService;
 import com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyBuilder;
 import org.junit.Test;
@@ -27,6 +26,6 @@ public class ThrottleBucketServiceTest {
         policyService.update(ThrottlePolicyBuilder.of("createBucketTest").nToken(10L).build());
 
         bucketService.createBucket("createBucketTest");
-        assertTrue(bucketService.checkBucket(Lists.newArrayList("createBucketTest")));
+        assertTrue(bucketService.checkBucket("createBucketTest"));
     }
 }

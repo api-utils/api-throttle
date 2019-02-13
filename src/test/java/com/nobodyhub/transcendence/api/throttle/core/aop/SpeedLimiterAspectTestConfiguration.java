@@ -18,7 +18,7 @@ public class SpeedLimiterAspectTestConfiguration {
 
 
     public static class TestClass {
-        @SpeedLimited(bucket = "TestBucket")
+        @SpeedLimited(buckets = "TestBucket")
         public void execute(List<Long> executions) {
             executions.add(System.currentTimeMillis());
         }
