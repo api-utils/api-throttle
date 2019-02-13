@@ -15,12 +15,11 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Repeatable(SpeedLimits.class)
 public @interface SpeedLimited {
     /**
-     * The bucket name
+     * The bucket names
      */
-    String bucket();
+    String[] buckets();
 
     /**
      * Policy applied when the execution blocked
