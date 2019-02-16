@@ -1,12 +1,14 @@
 package com.nobodyhub.transcendence.api.throttle.policy.service;
 
+import com.nobodyhub.transcendence.api.throttle.api.domain.PagingResponse;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import com.nobodyhub.transcendence.api.throttle.policy.repository.ThrottlePolicyRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -16,15 +18,13 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ThrottlePolicyService {
     private final ThrottlePolicyRepository policyRepository;
 
-    protected ThrottlePolicyService(ThrottlePolicyRepository policyRepository) {
-        this.policyRepository = policyRepository;
-    }
-
-    public Page<ThrottlePolicy> findAll(Pageable pageable) {
-        return policyRepository.findAll(pageable);
+    @Cacheable(value = "throttle-policy")
+    public PagingResponse<ThrottlePolicy> findAll(Pageable pageable) {
+        return PagingResponse.of(policyRepository.findAll(pageable));
     }
 
     /**

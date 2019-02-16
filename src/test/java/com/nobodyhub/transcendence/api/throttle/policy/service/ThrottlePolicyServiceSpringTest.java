@@ -1,5 +1,6 @@
 package com.nobodyhub.transcendence.api.throttle.policy.service;
 
+import com.nobodyhub.transcendence.api.throttle.api.domain.PagingResponse;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketWindow;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicyBuilder;
@@ -7,11 +8,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 
 @RunWith(SpringRunner.class)
@@ -41,5 +43,12 @@ public class ThrottlePolicyServiceSpringTest {
         policyService.delete("findTest");
         found = policyService.find("findTest");
         assertNull(found);
+    }
+
+    @Test
+    public void redisCacheTest2() {
+        Pageable pageable = PageRequest.of(3, 20);
+        PagingResponse<ThrottlePolicy> page = this.policyService.findAll(pageable);
+        assertNotNull(page);
     }
 }

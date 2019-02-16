@@ -1,6 +1,8 @@
 package com.nobodyhub.transcendence.api.throttle.api.domain;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.lang.NonNull;
 
@@ -12,6 +14,7 @@ import java.util.List;
  * @param <T> result class
  */
 @Data
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public class PagingResponse<T> {
     /**
      * returned data
@@ -41,6 +44,16 @@ public class PagingResponse<T> {
         resp.setPageNumber(page.getNumber());
         resp.setTotalPages(page.getTotalPages());
         resp.setTotalRecords(page.getTotalElements());
+        return resp;
+    }
+
+    public static <T> PagingResponse<T> of(@NonNull PagingResponse<T> page) {
+        PagingResponse<T> resp = new PagingResponse<>();
+        resp.setData(page.getData());
+        resp.setPageSize(page.getPageSize());
+        resp.setPageNumber(page.getPageNumber());
+        resp.setTotalPages(page.getTotalPages());
+        resp.setTotalRecords(page.getTotalRecords());
         return resp;
     }
 }
