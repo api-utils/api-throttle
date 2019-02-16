@@ -16,3 +16,15 @@ spring.cache:
 spring.redis:
   host: javis-server
   port: 6379
+
+# Kafka Configuration
+spring.cloud.stream.kafka:
+  binder:
+    brokers: javis-server
+
+# Channel configuration
+spring.cloud.stream.bindings:
+  api-throttle-bucket-status-error:
+    content-type: application/json
+  api-throttle-bucket-empty:
+    content-type: application/json
