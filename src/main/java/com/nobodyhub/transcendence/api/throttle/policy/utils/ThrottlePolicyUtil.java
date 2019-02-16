@@ -1,3 +1,4 @@
+
 package com.nobodyhub.transcendence.api.throttle.policy.utils;
 
 import com.nobodyhub.transcendence.api.throttle.bucket.domain.BucketStatus;
@@ -5,6 +6,7 @@ import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketWindow;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.springframework.lang.NonNull;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ThrottlePolicyUtil {
@@ -25,11 +27,13 @@ public final class ThrottlePolicyUtil {
     }
 
     /**
+     * return the lower limit(earliest) for the window
+     *
      * @param policy
      * @param timestamp
      * @return
      */
-    public static long getWindowUpperLimit(ThrottlePolicy policy, long timestamp) {
+    public static long getWindowLowerLimit(@NonNull ThrottlePolicy policy, long timestamp) {
         if (policy.getWindow() != null) {
             return getEarliest(policy.getWindow(), timestamp);
         }
@@ -39,10 +43,10 @@ public final class ThrottlePolicyUtil {
     /**
      * Get the earliest timestamp that should be retained in the window
      *
-     * @param timestamp
+     * @param timestamp current time in millisecond
      * @return
      */
-    private static long getEarliest(BucketWindow window, long timestamp) {
+    private static long getEarliest(@NonNull BucketWindow window, long timestamp) {
         long earliest = timestamp - window.getSize();
         return earliest > 0 ? earliest : 0;
     }

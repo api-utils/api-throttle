@@ -23,7 +23,7 @@ import java.util.Map;
 
 import static com.nobodyhub.transcendence.api.throttle.bucket.utils.ThrottleBucketNamingUtil.*;
 import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyUtil.check;
-import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyUtil.getWindowUpperLimit;
+import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyUtil.getWindowLowerLimit;
 
 @Repository
 @RequiredArgsConstructor
@@ -152,7 +152,7 @@ public class ThrottleBucketRepository {
             status = initBucketStatus(redisOperations, policy);
         }
         // bucket windowed history
-        redisOperations.boundZSetOps(window(policy.getBucket())).removeRangeByScore(0, getWindowUpperLimit(policy, timestamp));
+        redisOperations.boundZSetOps(window(policy.getBucket())).removeRangeByScore(0, getWindowLowerLimit(policy, timestamp));
         Long nWindowed = redisOperations.boundZSetOps(window(policy.getBucket())).size();
         if (nWindowed != null) {
             status.setNWindowed(nWindowed);

@@ -1,6 +1,5 @@
-package com.nobodyhub.transcendence.api.throttle.policy.utils;
+package com.nobodyhub.transcendence.api.throttle.policy.domain;
 
-import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

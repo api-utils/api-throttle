@@ -1,7 +1,5 @@
-package com.nobodyhub.transcendence.api.throttle.policy.utils;
+package com.nobodyhub.transcendence.api.throttle.policy.domain;
 
-import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketWindow;
-import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import lombok.AllArgsConstructor;
 
 import static com.nobodyhub.transcendence.api.throttle.core.utils.NumberUtils.getNonNegative;

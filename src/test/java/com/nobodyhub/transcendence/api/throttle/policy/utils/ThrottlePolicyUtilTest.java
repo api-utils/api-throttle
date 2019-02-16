@@ -1,12 +1,13 @@
 package com.nobodyhub.transcendence.api.throttle.policy.utils;
 
 import com.nobodyhub.transcendence.api.throttle.bucket.domain.BucketStatus;
+import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketWindow;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
+import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicyBuilder;
 import org.junit.Test;
 
 import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyUtil.check;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ThrottlePolicyUtilTest {
     @Test
@@ -37,5 +38,25 @@ public class ThrottlePolicyUtilTest {
         policy = ThrottlePolicyBuilder.of("bucket").window("60", "15").nToken("10").interval("3000").build();
         // check window pass
         assertTrue(check(policy, 4000L, status));
+    }
+
+    @Test
+    public void getWindowLowerLimitTest() {
+        ThrottlePolicy policy = ThrottlePolicyBuilder.of("getWindowLowerLimitTest")
+                .build();
+
+        long actual = ThrottlePolicyUtil.getWindowLowerLimit(policy, 20000);
+        // no window is specified
+        assertEquals(20000, actual);
+
+        policy.setWindow(new BucketWindow(10000, 5));
+
+        actual = ThrottlePolicyUtil.getWindowLowerLimit(policy, 20000);
+        // the earliest is after era
+        assertEquals(10000, actual);
+
+        actual = ThrottlePolicyUtil.getWindowLowerLimit(policy, 8000);
+        // the earliest is before era
+        assertEquals(0, actual);
     }
 }

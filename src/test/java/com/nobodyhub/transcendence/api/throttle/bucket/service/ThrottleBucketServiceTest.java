@@ -1,7 +1,7 @@
 package com.nobodyhub.transcendence.api.throttle.bucket.service;
 
+import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicyBuilder;
 import com.nobodyhub.transcendence.api.throttle.policy.service.ThrottlePolicyService;
-import com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

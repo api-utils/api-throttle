@@ -1,5 +1,6 @@
 package com.nobodyhub.transcendence.api.throttle.policy.domain;
 
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  */
 @Document
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @EqualsAndHashCode
 public class ThrottlePolicy implements Comparable<ThrottlePolicy> {
     /**
