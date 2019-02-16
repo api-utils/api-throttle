@@ -36,6 +36,9 @@ public class ThrottlePolicy implements Comparable<ThrottlePolicy> {
      */
     private Long interval;
 
+    /**
+     * Policies should be sorted by name
+     */
     @Override
     public int compareTo(ThrottlePolicy o) {
         return this.getBucket().compareTo(o.getBucket());
