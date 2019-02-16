@@ -22,7 +22,7 @@ import java.util.Optional;
 public class ThrottlePolicyService {
     private final ThrottlePolicyRepository policyRepository;
 
-    @Cacheable(value = "throttle-policy")
+    @Cacheable(value = "throttle-policy", keyGenerator = "pageableKeyGenerator")
     public PagingResponse<ThrottlePolicy> findAll(Pageable pageable) {
         return PagingResponse.of(policyRepository.findAll(pageable));
     }

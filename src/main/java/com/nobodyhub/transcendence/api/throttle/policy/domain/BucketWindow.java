@@ -1,13 +1,14 @@
 package com.nobodyhub.transcendence.api.throttle.policy.domain;
 
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Scroll window restriction for bucket policy
  */
 @Data
-@NoArgsConstructor(access = AccessLevel.PACKAGE) // used by json
 @AllArgsConstructor
 @EqualsAndHashCode
 public class BucketWindow {

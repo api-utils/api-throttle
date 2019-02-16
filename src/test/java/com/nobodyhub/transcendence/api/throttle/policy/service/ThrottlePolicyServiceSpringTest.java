@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -23,9 +23,14 @@ public class ThrottlePolicyServiceSpringTest {
     @Autowired
     private ThrottlePolicyService policyService;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
     @Test
     public void redisCacheTest() {
         ThrottlePolicy found = policyService.find("findTest");
+        assertNull(found);
+        found = policyService.find("findTest");
         assertNull(found);
 
         ThrottlePolicy policy = ThrottlePolicyBuilder.of("findTest")
@@ -47,8 +52,9 @@ public class ThrottlePolicyServiceSpringTest {
 
     @Test
     public void redisCacheTest2() {
-        Pageable pageable = PageRequest.of(3, 20);
+        PageRequest pageable = PageRequest.of(3, 20);
         PagingResponse<ThrottlePolicy> page = this.policyService.findAll(pageable);
         assertNotNull(page);
+        redisTemplate.delete("throttle-policy::Page request [number: 3, size 20, sort: UNSORTED]");
     }
 }
