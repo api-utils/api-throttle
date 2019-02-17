@@ -6,6 +6,8 @@ import com.nobodyhub.transcendence.api.throttle.bucket.domain.BucketStatus;
 import com.nobodyhub.transcendence.api.throttle.bucket.utils.BucketStatusBuilder;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.data.redis.core.RedisConnectionUtils;
@@ -20,23 +22,32 @@ import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import static com.nobodyhub.transcendence.api.throttle.bucket.utils.ThrottleBucketNamingUtil.status;
 import static com.nobodyhub.transcendence.api.throttle.bucket.utils.ThrottleBucketNamingUtil.window;
 import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyUtil.check;
 import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyUtil.getWindowLowerLimit;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class ThrottleBucketRepository {
     private final RedisTemplate<String, Object> redisTemplate;
 
+    @Value("${api-throttle.redis.transaction.max-delay}")
+    private int retryDelay;
+
+    @Value("${api-throttle.redis.transaction.max-times}")
+    private int retryTimes;
+
     /**
      * Create new bucket for the given policy
      *
      * @param policy
+     * @return true if create succesfully
      */
-    public void createBucket(@NonNull ThrottlePolicy policy) {
+    public boolean createBucket(@NonNull ThrottlePolicy policy) {
         SessionCallback<List<Object>> callback = new SessionCallback<List<Object>>() {
             @Override
             @SuppressWarnings({"unchecked"})
@@ -53,11 +64,8 @@ public class ThrottleBucketRepository {
                 return operations.exec();
             }
         };
-        //TODO: consider time limits on retry
-        List<Object> rst = null;
-        while (rst == null || rst.isEmpty()) {
-            rst = this.redisTemplate.execute(callback);
-        }
+        List<Object> rst = executeCallback(callback);
+        return !(rst == null || rst.isEmpty());
     }
 
     /**
@@ -126,13 +134,7 @@ public class ThrottleBucketRepository {
                 return executed;
             }
         };
-
-        //TODO: consider time limits on retry
-        Boolean rst = null;
-        while (rst == null) {
-            rst = this.redisTemplate.execute(callback);
-        }
-        return rst;
+        return executeCallback(callback);
     }
 
     /**
@@ -235,5 +237,53 @@ public class ThrottleBucketRepository {
     private long getServerTime() {
         Long timestamp = RedisConnectionUtils.getConnection(redisTemplate.getRequiredConnectionFactory()).time();
         return timestamp == null ? System.currentTimeMillis() : timestamp;
+    }
+
+    private <T> T executeCallback(SessionCallback<T> callback) {
+        T rst = null;
+        log.debug("Start callback execution!");
+        int nTry = retryTimes;
+        while (nTry > 0 && notExecution(rst)) {
+            log.debug("Trying {} time(s)...", nTry);
+            rst = this.redisTemplate.execute(callback);
+            if (notExecution(rst)) {
+                long sleep = new Random().nextInt(retryDelay) + 1;
+                log.debug("Tried {} time(s) but fails, will retry in {} ms!", nTry, sleep);
+                try {
+                    Thread.sleep(sleep);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    // do nothing
+                }
+            }
+            nTry--;
+        }
+        boolean success = !(notExecution(rst));
+        if (success) {
+            log.debug("Callback Execution success after trying {} times!",
+                    retryTimes - nTry);
+        } else {
+            log.warn("Callback Execution fails after trying {} times!",
+                    retryTimes - nTry);
+        }
+        return rst;
+    }
+
+    /**
+     * Judge from the callback result whether the transaction has <b>NOT</b> been executed or not
+     *
+     * @param result callback execution result
+     * @param <T>    return type of callback
+     * @return true if object not null and collection not empty
+     */
+    private <T> boolean notExecution(T result) {
+        if (result == null) {
+            return true;
+        }
+        if (result instanceof List) {
+            List list = (List) result;
+            return list.isEmpty();
+        }
+        return false;
     }
 }
