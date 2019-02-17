@@ -23,8 +23,8 @@ public class ThrottlePolicyController {
      * @return
      */
     @GetMapping(path = "/all")
-    PagingResponse<ThrottlePolicy> findAllPolicies(@RequestParam(value = "page", defaultValue = "0") int page,
-                                                   @RequestParam(value = "pageSize", required = false, defaultValue = "20") int pageSize) {
+    PagingResponse<ThrottlePolicy> findAllPolicies(@RequestParam(value = "page", defaultValue = "0", required = false) int page,
+                                                   @RequestParam(value = "pageSize", defaultValue = "20", required = false) int pageSize) {
         Pageable pageable = PageRequest.of(page, pageSize);
         return PagingResponse.of(policyService.findAll(pageable));
     }

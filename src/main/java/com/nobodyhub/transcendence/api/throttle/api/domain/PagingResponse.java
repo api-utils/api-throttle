@@ -1,5 +1,6 @@
 package com.nobodyhub.transcendence.api.throttle.api.domain;
 
+import com.google.common.collect.Lists;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,7 +20,7 @@ public class PagingResponse<T> {
     /**
      * returned data
      */
-    private List<T> data;
+    private List<T> data = Lists.newArrayList();
     /**
      * page size
      */
@@ -54,6 +55,16 @@ public class PagingResponse<T> {
         resp.setPageNumber(page.getPageNumber());
         resp.setTotalPages(page.getTotalPages());
         resp.setTotalRecords(page.getTotalRecords());
+        return resp;
+    }
+
+    public static <T> PagingResponse<T> of(@NonNull T data) {
+        PagingResponse<T> resp = new PagingResponse<>();
+        resp.getData().add(data);
+        resp.setPageSize(1);
+        resp.setPageNumber(1);
+        resp.setTotalPages(1);
+        resp.setTotalRecords(1);
         return resp;
     }
 }
