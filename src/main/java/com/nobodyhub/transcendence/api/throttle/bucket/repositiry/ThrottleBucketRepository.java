@@ -43,6 +43,7 @@ public class ThrottleBucketRepository {
 
     /**
      * Create new bucket for the given policy
+     * if exist, will skip
      *
      * @param policy
      * @return true if create succesfully
@@ -58,8 +59,13 @@ public class ThrottleBucketRepository {
                         window(policy.getBucket())
                 ));
                 // multi
+                BucketStatus bucketStatus = (BucketStatus) operations.boundValueOps(status(policy.getBucket())).get();
                 operations.multi();
-                initBucketStatus(operations, policy);
+                if (bucketStatus == null) {
+                    initBucketStatus(operations, policy);
+                }
+                // fill in the exec result to avoid empty
+                operations.boundValueOps(status(policy.getBucket())).get();
                 // exec
                 return operations.exec();
             }
@@ -86,55 +92,55 @@ public class ThrottleBucketRepository {
 
     /**
      * Fetch the bucket status and check whether to proceed to execute
-     * A new key for the execution will be added to redis and set to true if OK to execute
      *
      * @param policies
-     * @return the execution token
+     * @return whether can be executed
      */
     public boolean checkBucket(@NonNull List<ThrottlePolicy> policies) {
-        Collections.sort(policies);
-        SessionCallback<Boolean> callback = new SessionCallback<Boolean>() {
+        Collections.sort(Lists.newArrayList(policies));
+        SessionCallback<List<Object>> callback = new SessionCallback<List<Object>>() {
             @Override
             @SuppressWarnings({"unchecked"})
-            public Boolean execute(RedisOperations redisOperations) throws DataAccessException {
-                List<String> watchList = Lists.newArrayList();
-                policies.stream()
-                        .map(ThrottlePolicy::getBucket)
-                        .forEach(bucket -> {
-                            watchList.add(status(bucket));
-                            watchList.add(window(bucket));
-                        });
-                // watch
-                redisOperations.watch(watchList);
-                long timestamp = getServerTime();
-                Map<ThrottlePolicy, BucketStatus> statusMap = Maps.newHashMap();
-                policies.forEach(policy -> statusMap.put(policy, getBucketStatus(redisOperations, timestamp, policy)));
-                // multi
-                Boolean executed = null;
-                redisOperations.multi();
-
-                if (statusMap.entrySet().stream().allMatch(entry ->
-                        check(entry.getKey(), timestamp, entry.getValue()))) {
-                    // update the status
-                    statusMap.values().stream()
-                            .map(status -> BucketStatusBuilder.of(status)
-                                    .decreaseNToken()
-                                    .lastRequest(timestamp)
-                                    .build())
-                            .forEach(status -> updateBucketStatus(redisOperations, status));
-                    // exec
-                    redisOperations.exec();
-                    executed = true;
-                } else {
-                    // TODO: push a message to message broker
-                    // discard
-                    redisOperations.discard();
-                    executed = false;
+            public List<Object> execute(RedisOperations redisOperations) throws DataAccessException {
+                try {
+                    List<String> watchList = Lists.newArrayList();
+                    policies.stream()
+                            .map(ThrottlePolicy::getBucket)
+                            .forEach(bucket -> {
+                                watchList.add(status(bucket));
+                                watchList.add(window(bucket));
+                            });
+                    // watch
+                    redisOperations.watch(watchList);
+                    long timestamp = getServerTime();
+                    Map<ThrottlePolicy, BucketStatus> statusMap = Maps.newHashMap();
+                    policies.forEach(policy -> statusMap.put(policy, getBucketStatus(redisOperations, timestamp, policy)));
+                    // multi
+                    if (statusMap.entrySet().stream().allMatch(entry ->
+                            check(entry.getKey(), timestamp, entry.getValue()))) {
+                        redisOperations.multi();
+                        // update the status
+                        statusMap.values().stream()
+                                .map(status -> BucketStatusBuilder.of(status)
+                                        .decreaseNToken()
+                                        .lastRequest(timestamp)
+                                        .build())
+                                .forEach(status -> {
+                                    updateBucketStatus(redisOperations, status);
+                                    getBucketStatus(status.getBucket());
+                                });
+                        // exec
+                        return redisOperations.exec();
+                    }
+                    redisOperations.unwatch();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                return executed;
+                return null;
             }
         };
-        return executeCallback(callback);
+        List<Object> rst = executeCallback(callback);
+        return !(rst == null || rst.isEmpty());
     }
 
     /**
@@ -244,11 +250,11 @@ public class ThrottleBucketRepository {
         log.debug("Start callback execution!");
         int nTry = retryTimes;
         while (nTry > 0 && notExecution(rst)) {
-            log.debug("Trying {} time(s)...", nTry);
+            log.debug("Trying {} time...", retryTimes - nTry + 1);
             rst = this.redisTemplate.execute(callback);
             if (notExecution(rst)) {
-                long sleep = new Random().nextInt(retryDelay) + 1;
-                log.debug("Tried {} time(s) but fails, will retry in {} ms!", nTry, sleep);
+                long sleep = new Random().nextInt(retryDelay) + 1L;
+                log.debug("Tried {} time(s) but fails, will retry in {} ms!", retryTimes - nTry + 1, sleep);
                 try {
                     Thread.sleep(sleep);
                 } catch (InterruptedException e) {
