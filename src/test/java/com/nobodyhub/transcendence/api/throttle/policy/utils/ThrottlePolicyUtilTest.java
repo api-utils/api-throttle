@@ -1,6 +1,7 @@
 package com.nobodyhub.transcendence.api.throttle.policy.utils;
 
 import com.nobodyhub.transcendence.api.throttle.bucket.domain.BucketStatus;
+import com.nobodyhub.transcendence.api.throttle.bucket.utils.BucketStatusBuilder;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketWindow;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicyBuilder;
@@ -12,29 +13,29 @@ import static org.junit.Assert.*;
 public class ThrottlePolicyUtilTest {
     @Test
     public void checkTest() {
-        BucketStatus status = new BucketStatus("10", "0", 5L);
+        BucketStatus status = BucketStatusBuilder.of("bucketStatus").nToken(10L).lastRequest(0L).nWindowed(5L).build();
         ThrottlePolicy policy = ThrottlePolicyBuilder.of("bucket").nToken(10L).build();
         // check token pass
         assertTrue(check(policy, 0L, status));
 
-        status = new BucketStatus("0", "0", 5L);
+        status = BucketStatusBuilder.of("bucketStatus").nToken(0L).lastRequest(0L).nWindowed(5L).build();
         policy = ThrottlePolicyBuilder.of("bucket").nToken(10L).build();
         // check token fail
         assertFalse(check(policy, 0L, status));
 
-        status = new BucketStatus("10", "0", 5L);
+        status = BucketStatusBuilder.of("bucketStatus").nToken(10L).lastRequest(0L).nWindowed(5L).build();
         policy = ThrottlePolicyBuilder.of("bucket").window("60", "10").nToken("10").interval("3000").build();
         // check interval fail
         assertFalse(check(policy, 3000L, status));
         // check interval pass
         assertTrue(check(policy, 4000L, status));
 
-        status = new BucketStatus("10", "0", 15L);
+        status = BucketStatusBuilder.of("bucketStatus").nToken(10L).lastRequest(0L).nWindowed(15L).build();
         policy = ThrottlePolicyBuilder.of("bucket").window("60", "1").nToken("10").interval("3000").build();
         // check window fails
         assertFalse(check(policy, 4000L, status));
 
-        status = new BucketStatus("10", "0", 10L);
+        status = BucketStatusBuilder.of("bucketStatus").nToken(10L).lastRequest(0L).nWindowed(10L).build();
         policy = ThrottlePolicyBuilder.of("bucket").window("60", "15").nToken("10").interval("3000").build();
         // check window pass
         assertTrue(check(policy, 4000L, status));
