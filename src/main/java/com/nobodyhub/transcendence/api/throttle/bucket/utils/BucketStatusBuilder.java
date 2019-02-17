@@ -4,6 +4,7 @@ import com.nobodyhub.transcendence.api.throttle.bucket.domain.BucketStatus;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.springframework.lang.NonNull;
 
 /**
  * Builder/Updater for {@link BucketStatus}
@@ -21,7 +22,7 @@ public class BucketStatusBuilder {
     public static BucketStatusBuilder of(String bucket) {
         BucketStatus status = new BucketStatus();
         status.setBucket(bucket);
-        return new BucketStatusBuilder(status);
+        return of(status);
     }
 
     /**
@@ -84,13 +85,14 @@ public class BucketStatusBuilder {
      * @return
      */
     public BucketStatusBuilder nWindowed(long nWindowed) {
-        this.status.setNToken(nWindowed);
+        this.status.setNWindowed(nWindowed);
         return this;
     }
 
     /**
      * @return the final bucket status built
      */
+    @NonNull
     public BucketStatus build() {
         return this.status;
     }
