@@ -21,7 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static com.nobodyhub.transcendence.api.throttle.bucket.utils.ThrottleBucketNamingUtil.*;
+import static com.nobodyhub.transcendence.api.throttle.bucket.utils.ThrottleBucketNamingUtil.status;
+import static com.nobodyhub.transcendence.api.throttle.bucket.utils.ThrottleBucketNamingUtil.window;
 import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyUtil.check;
 import static com.nobodyhub.transcendence.api.throttle.policy.utils.ThrottlePolicyUtil.getWindowLowerLimit;
 
@@ -210,22 +211,6 @@ public class ThrottleBucketRepository {
         }
         return results;
     }
-
-    /**
-     * Check the value of execution token
-     *
-     * @param bucket
-     * @param execToken
-     * @return true if OK to execute
-     */
-    public boolean checkExecToken(@NonNull String bucket,
-                                  @NonNull String execToken) {
-        String key = execution(bucket, execToken);
-        boolean rst = Boolean.TRUE.equals(this.redisTemplate.boundValueOps(key).get());
-        redisTemplate.delete(key);
-        return rst;
-    }
-
 
     /**
      * Update the bucket status
