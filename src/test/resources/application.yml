@@ -1,3 +1,12 @@
+# setting for the redis to try for aborted transactions due to watched keys changed
+api-throttle.redis.transaction:
+  # max retry delay
+  max-delay: 20
+  # max retry times
+  max-times: 50
+
+spring.application.name: api-throttle-test
+
 # Database Configuration
 spring.data.mongodb:
   host: javis-server
@@ -28,3 +37,6 @@ spring.cloud.stream.bindings:
     content-type: application/json
   api-throttle-bucket-empty:
     content-type: application/json
+
+logging.level:
+  com.nobodyhub.transcendence.api.throttle.bucket.repositiry.ThrottleBucketRepository: DEBUG
