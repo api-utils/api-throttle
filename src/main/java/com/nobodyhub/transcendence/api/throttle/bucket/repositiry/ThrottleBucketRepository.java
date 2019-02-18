@@ -188,11 +188,12 @@ public class ThrottleBucketRepository {
     /**
      * Get bucket status for given bucket names
      *
-     * @param buckets bucket name list
+     * @param bucketList bucket name list
      * @return bucket status list
      */
     @NotNull
-    public List<BucketStatus> getBucketStatus(@NotNull List<String> buckets) {
+    public List<BucketStatus> getBucketStatus(@NotNull List<String> bucketList) {
+        List<String> buckets = Lists.newArrayList(bucketList);
         SessionCallback<List<Object>> callback = new SessionCallback<List<Object>>() {
             @Override
             public List<Object> execute(RedisOperations operations) throws DataAccessException {
@@ -249,10 +250,10 @@ public class ThrottleBucketRepository {
         T rst = null;
         log.debug("Start callback execution!");
         int nTry = retryTimes;
-        while (nTry > 0 && notExecution(rst)) {
+        while (nTry > 0 && notExecuted(rst)) {
             log.debug("Trying {} time...", retryTimes - nTry + 1);
             rst = this.redisTemplate.execute(callback);
-            if (notExecution(rst)) {
+            if (notExecuted(rst)) {
                 long sleep = new Random().nextInt(retryDelay) + 1L;
                 log.debug("Tried {} time(s) but fails, will retry in {} ms!", retryTimes - nTry + 1, sleep);
                 try {
@@ -264,7 +265,7 @@ public class ThrottleBucketRepository {
             }
             nTry--;
         }
-        boolean success = !(notExecution(rst));
+        boolean success = !(notExecuted(rst));
         if (success) {
             log.debug("Callback Execution success after trying {} times!",
                     retryTimes - nTry);
@@ -282,7 +283,7 @@ public class ThrottleBucketRepository {
      * @param <T>    return type of callback
      * @return true if object not null and collection not empty
      */
-    private <T> boolean notExecution(T result) {
+    private <T> boolean notExecuted(T result) {
         if (result == null) {
             return true;
         }

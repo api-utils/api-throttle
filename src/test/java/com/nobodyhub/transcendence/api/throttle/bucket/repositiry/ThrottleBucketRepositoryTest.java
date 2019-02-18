@@ -1,6 +1,7 @@
 package com.nobodyhub.transcendence.api.throttle.bucket.repositiry;
 
 import com.google.common.collect.Lists;
+import com.nobodyhub.transcendence.api.throttle.bucket.domain.BucketStatus;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicyBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +16,11 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import static com.nobodyhub.transcendence.api.throttle.bucket.utils.ThrottleBucketNamingUtil.status;
 import static com.nobodyhub.transcendence.api.throttle.bucket.utils.ThrottleBucketNamingUtil.window;
+import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
 
@@ -35,7 +38,7 @@ public class ThrottleBucketRepositoryTest extends AbstractTestNGSpringContextTes
     private ThrottlePolicy policy;
 
     @BeforeClass
-    public void createBucketTestSetup() {
+    public void beforeCreateBucketTest() {
         this.policy = ThrottlePolicyBuilder.of("createBucketTest")
                 .nToken(10L)
                 .build();
@@ -52,7 +55,7 @@ public class ThrottleBucketRepositoryTest extends AbstractTestNGSpringContextTes
     private List<ThrottlePolicy> policies;
 
     @BeforeClass
-    public void setUp() {
+    public void beforeCheckBucketTest() {
         this.policies = Lists.newArrayList();
         this.policies.add(ThrottlePolicyBuilder.of("checkBucketTest1").nToken(100L).build());
         this.policies.add(ThrottlePolicyBuilder.of("checkBucketTest2").nToken(10L).build());
@@ -67,11 +70,49 @@ public class ThrottleBucketRepositoryTest extends AbstractTestNGSpringContextTes
         assertTrue(checkBucketRst.get() <= 10);
     }
 
+    private List<String> buckets = Lists.newArrayList();
+
+    @BeforeClass
+    public void beforeGetBucketsStatusTest() {
+        IntStream.range(0, 10).forEach(idx -> {
+            this.bucketRepository.createBucket(
+                    ThrottlePolicyBuilder.of("getBucketsStatusTest" + idx)
+                            .nToken((long) idx)
+                            .build());
+            buckets.add("getBucketsStatusTest" + idx);
+        });
+    }
+
+    @Test(threadPoolSize = 30, invocationCount = 50, timeOut = 100000)
+    public void getBucketsStatusTest() {
+        List<BucketStatus> statusList = this.bucketRepository.getBucketStatus(buckets);
+        int idx = 0;
+        for (BucketStatus status : statusList) {
+            assertEquals(idx, status.getNToken());
+            assertEquals("getBucketsStatusTest" + idx, status.getBucket());
+            idx++;
+        }
+    }
+
+    @Test(threadPoolSize = 30, invocationCount = 50, timeOut = 100000)
+    public void getBucketStatusTest() {
+        this.bucketRepository.createBucket(
+                ThrottlePolicyBuilder.of("getBucketStatusTest")
+                        .nToken(100L)
+                        .build());
+        BucketStatus status = this.bucketRepository.getBucketStatus("getBucketStatusTest");
+        assertEquals("getBucketStatusTest", status.getBucket());
+        assertEquals(100L, status.getNToken());
+        assertEquals(1L, status.getNWindowed());
+    }
+
     @AfterClass
     public void tearDown() {
         clearBucket("createBucketTest");
         clearBucket("checkBucketTest1");
         clearBucket("checkBucketTest2");
+        IntStream.range(0, 10).forEach(idx -> clearBucket("getBucketsStatusTest" + idx));
+        clearBucket("getBucketStatusTest");
     }
 
     private void clearBucket(String bucekt) {
