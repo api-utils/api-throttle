@@ -1,5 +1,6 @@
 package com.nobodyhub.transcendence.api.throttle.policy.service;
 
+import com.google.common.collect.Lists;
 import com.nobodyhub.transcendence.api.throttle.api.domain.PagingResponse;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
 import com.nobodyhub.transcendence.api.throttle.policy.repository.ThrottlePolicyRepository;
@@ -14,6 +15,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -36,8 +38,19 @@ public class ThrottlePolicyService {
     @Cacheable(value = "throttle-policy", key = "#bucket")
     @Nullable
     public ThrottlePolicy find(@NonNull String bucket) {
-        Optional<ThrottlePolicy> policy = this.policyRepository.getByBucket(bucket);
+        Optional<ThrottlePolicy> policy = this.policyRepository.findByBucket(bucket);
         return policy.orElse(null);
+    }
+
+    public List<ThrottlePolicy> find(@NonNull List<String> buckets) {
+        List<ThrottlePolicy> policies = Lists.newArrayList();
+        for (String bucket : buckets) {
+            ThrottlePolicy policy = find(bucket);
+            if (policy != null) {
+                policies.add(policy);
+            }
+        }
+        return policies;
     }
 
     /**

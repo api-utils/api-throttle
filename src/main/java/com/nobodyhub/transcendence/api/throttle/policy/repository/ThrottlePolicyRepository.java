@@ -6,5 +6,11 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import java.util.Optional;
 
 public interface ThrottlePolicyRepository extends PagingAndSortingRepository<ThrottlePolicy, String> {
-    Optional<ThrottlePolicy> getByBucket(String bucket);
+    /**
+     * find policy by name
+     *
+     * @param bucket bucket name
+     * @return policy with given bucket name
+     */
+    Optional<ThrottlePolicy> findByBucket(String bucket);
 }

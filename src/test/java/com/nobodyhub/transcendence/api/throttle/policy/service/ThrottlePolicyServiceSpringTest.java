@@ -1,5 +1,6 @@
 package com.nobodyhub.transcendence.api.throttle.policy.service;
 
+import com.google.common.collect.Lists;
 import com.nobodyhub.transcendence.api.throttle.api.domain.PagingResponse;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.BucketWindow;
 import com.nobodyhub.transcendence.api.throttle.policy.domain.ThrottlePolicy;
@@ -28,10 +29,12 @@ public class ThrottlePolicyServiceSpringTest {
 
     @Test
     public void redisCacheTest() {
+        policyService.delete("findTest");
         ThrottlePolicy found = policyService.find("findTest");
         assertNull(found);
-        found = policyService.find("findTest");
+        // get from cache
         assertNull(found);
+        assertTrue(policyService.find(Lists.newArrayList("findTest")).isEmpty());
 
         ThrottlePolicy policy = ThrottlePolicyBuilder.of("findTest")
                 .nToken(100L)
@@ -44,6 +47,9 @@ public class ThrottlePolicyServiceSpringTest {
         assertEquals(policy.getWindow(), updated.getWindow());
         assertEquals(policy.getInterval(), updated.getInterval());
         assertEquals(policy.getBucket(), updated.getBucket());
+
+        assertNotNull(policyService.find(Lists.newArrayList("findTest")));
+        assertEquals(1, policyService.find(Lists.newArrayList("findTest")).size());
 
         policyService.delete("findTest");
         found = policyService.find("findTest");
