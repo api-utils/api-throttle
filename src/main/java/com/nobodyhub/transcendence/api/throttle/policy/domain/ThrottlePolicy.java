@@ -29,12 +29,12 @@ public class ThrottlePolicy implements Comparable<ThrottlePolicy> {
      * Number of initial tokens
      * null value means no limitation on the number of the tokens
      */
-    private Long nToken;
+    private long nToken;
     /**
      * Minimum interval in <b>millisecond</b> between executions, non-negative
      * null value means no interval required between executions
      */
-    private Long interval;
+    private long interval;
 
     /**
      * Policies should be sorted by name

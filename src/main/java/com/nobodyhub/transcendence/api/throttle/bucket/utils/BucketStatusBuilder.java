@@ -43,9 +43,7 @@ public class BucketStatusBuilder {
      */
     public static BucketStatusBuilder of(ThrottlePolicy policy) {
         BucketStatusBuilder builder = BucketStatusBuilder.of(policy.getBucket());
-        if (policy.getNToken() != null) {
-            builder = builder.nToken(policy.getNToken());
-        }
+        builder = builder.nToken(policy.getNToken());
         return builder;
     }
 

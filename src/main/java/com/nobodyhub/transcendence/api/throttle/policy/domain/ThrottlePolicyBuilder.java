@@ -2,9 +2,6 @@ package com.nobodyhub.transcendence.api.throttle.policy.domain;
 
 import lombok.AllArgsConstructor;
 
-import static com.nobodyhub.transcendence.api.throttle.core.utils.NumberUtils.getNonNegative;
-import static com.nobodyhub.transcendence.api.throttle.core.utils.NumberUtils.parseLong;
-
 @AllArgsConstructor
 public final class ThrottlePolicyBuilder {
     private ThrottlePolicy policy;
@@ -20,33 +17,20 @@ public final class ThrottlePolicyBuilder {
         return this;
     }
 
-    public ThrottlePolicyBuilder window(String windowSize, String windowLimit) {
-        Long wSize = getNonNegative(parseLong(windowSize));
-        Long wLimit = getNonNegative(parseLong(windowLimit));
-        if (wSize != null && wSize > 0
-                && wLimit != null && wLimit > 0) {
+    public ThrottlePolicyBuilder window(long wSize, long wLimit) {
+        if (wSize > 0 && wLimit > 0) {
             this.window(new BucketWindow(wSize, wLimit));
         }
         return this;
     }
 
     public ThrottlePolicyBuilder nToken(Long nToken) {
-        this.policy.setNToken(getNonNegative(nToken));
-        return this;
-    }
-
-    public ThrottlePolicyBuilder nToken(String nToken) {
-        this.nToken(parseLong(nToken));
+        this.policy.setNToken(nToken < 0 ? 0 : nToken);
         return this;
     }
 
     public ThrottlePolicyBuilder interval(Long interval) {
-        this.policy.setInterval(getNonNegative(interval));
-        return this;
-    }
-
-    public ThrottlePolicyBuilder interval(String interval) {
-        this.interval(parseLong(interval));
+        this.policy.setInterval(interval < 0 ? 0 : interval);
         return this;
     }
 

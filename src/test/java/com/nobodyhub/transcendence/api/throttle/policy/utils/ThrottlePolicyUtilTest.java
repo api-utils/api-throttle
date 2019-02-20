@@ -24,19 +24,20 @@ public class ThrottlePolicyUtilTest {
         assertFalse(check(policy, 0L, status));
 
         status = BucketStatusBuilder.of("bucketStatus").nToken(10L).lastRequest(0L).nWindowed(5L).build();
-        policy = ThrottlePolicyBuilder.of("bucket").window("60", "10").nToken("10").interval("3000").build();
+        policy = ThrottlePolicyBuilder.of("bucket").window(60L, 10L).nToken(10L).interval(3000L).build();
         // check interval fail
-        assertFalse(check(policy, 3000L, status));
+        assertFalse(check(policy, 2000L, status));
         // check interval pass
+        assertTrue(check(policy, 3000L, status));
         assertTrue(check(policy, 4000L, status));
 
         status = BucketStatusBuilder.of("bucketStatus").nToken(10L).lastRequest(0L).nWindowed(15L).build();
-        policy = ThrottlePolicyBuilder.of("bucket").window("60", "1").nToken("10").interval("3000").build();
+        policy = ThrottlePolicyBuilder.of("bucket").window(60L, 1L).nToken(10L).interval(3000L).build();
         // check window fails
         assertFalse(check(policy, 4000L, status));
 
         status = BucketStatusBuilder.of("bucketStatus").nToken(10L).lastRequest(0L).nWindowed(10L).build();
-        policy = ThrottlePolicyBuilder.of("bucket").window("60", "15").nToken("10").interval("3000").build();
+        policy = ThrottlePolicyBuilder.of("bucket").window(60L, 15L).nToken(10L).interval(3000L).build();
         // check window pass
         assertTrue(check(policy, 4000L, status));
     }
