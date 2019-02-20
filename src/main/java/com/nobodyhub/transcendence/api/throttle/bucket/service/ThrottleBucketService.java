@@ -43,14 +43,14 @@ public class ThrottleBucketService {
      * Create new bucket for the policy of given name
      *
      * @param bucket
+     * @return true if created successully. false if existed or fail to create
      */
-    public void createBucket(@NonNull String bucket) {
+    public boolean createBucket(@NonNull String bucket) {
         ThrottlePolicy policy = policyService.find(bucket);
         if (policy != null) {
-            bucketRepository.createBucket(policy);
-            return;
+            return bucketRepository.createBucket(policy);
         }
-        log.warn("No policy found for Bucket: {}! No throttle will be applied!", bucket);
+        return false;
     }
 
     /**

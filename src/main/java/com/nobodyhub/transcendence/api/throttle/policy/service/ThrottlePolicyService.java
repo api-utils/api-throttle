@@ -42,6 +42,13 @@ public class ThrottlePolicyService {
         return policy.orElse(null);
     }
 
+    /**
+     * Get policies for given bucket list
+     *
+     * @param buckets
+     * @return
+     */
+    @NonNull
     public List<ThrottlePolicy> find(@NonNull List<String> buckets) {
         List<ThrottlePolicy> policies = Lists.newArrayList();
         for (String bucket : buckets) {
@@ -54,7 +61,7 @@ public class ThrottlePolicyService {
     }
 
     /**
-     * Update policy
+     * Create/Update policy
      *
      * @param policy
      * @return
